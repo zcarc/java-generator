@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Java File Generator</title>
     <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.10.5/cdn.min.js"
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"
       defer
     ></script>
     <style>
@@ -65,14 +65,15 @@
 
     <div class="form-group">
       <label>
-        <input type="checkbox" id="useLombok" x-model="useLombok" /> Use Lombok
+        <input type="checkbox" id="useLombok" x-model="useLombok" /> @Getter,
+        @Setter
       </label>
     </div>
 
     <div id="methodsContainer">
-      <template x-for="(method, index) in methods" :key="method.id">
+      <template x-for="(method) in methods" :key="method.id">
         <div class="method">
-          <h3 x-text="`Method ${index + 1}`"></h3>
+          <h3 x-text="`Method ${method.id}`"></h3>
           <div class="form-group">
             <label>Method Name:</label>
             <input type="text" x-model="method.name" required />
@@ -98,6 +99,12 @@
         </div>
       </template>
     </div>
+    <select x-model="addNumber">
+      <option selected>1</option>
+      <option>3</option>
+      <option>5</option>
+      <option>10</option>
+    </select>
     <button @click="addMethod">Add Method</button>
     <button @click="generateCode">Generate Code</button>
 
@@ -116,21 +123,26 @@
         return {
           fileName: "",
           isClass: true,
-          useLombok: false,
+          useLombok: true,
+          addNumber: 1,
           methods: [],
           generatedCode: "",
 
           addMethod() {
-            const methods = this.methods;
-            const id =
-              methods.length > 0 ? Math.max(methods.map((m) => m.id)) : 1;
-            this.methods.push({
-              id,
-              name: "",
-              accessModifier: "public",
-              returnType: "void",
-              parameters: "",
-            });
+            for (let i = 0; i < this.addNumber; i++) {
+              const methods = this.methods;
+              const id =
+                methods.length > 0
+                  ? Math.max(...methods.map((m) => m.id)) + 1
+                  : 1;
+              this.methods.push({
+                id,
+                name: "",
+                accessModifier: "public",
+                returnType: "void",
+                parameters: "",
+              });
+            }
           },
 
           deleteMethod(id) {
