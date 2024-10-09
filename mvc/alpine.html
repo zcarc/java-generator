@@ -3,11 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Java File Generator</title>
+    <title>MVC 자바 생성기</title>
+
     <script
       src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"
       defer
     ></script>
+    <script src="./alpine.js"></script>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -41,138 +43,412 @@
       #methodsContainer {
         margin-top: 20px;
       }
-      .method {
+      .container {
         border: 1px solid #ddd;
         padding: 10px;
+        margin-bottom: 10px;
+      }
+      .p-10 {
+        padding: 10px;
+      }
+      .mt-10 {
+        margin-top: 10px;
+      }
+      .mb-10 {
         margin-bottom: 10px;
       }
     </style>
   </head>
   <body>
-    <h1>Java File Generator</h1>
+    <h1>MVC 자바 생성기</h1>
 
     <div class="form-group">
-      <label for="fileName">File Name (Class/Interface Name):</label>
+      <label for="fileName">파일명:</label>
       <input type="text" id="fileName" x-model="fileName" required />
     </div>
 
-    <div class="form-group">
-      <label>
-        <input type="checkbox" id="isClass" x-model="isClass" /> Is Class
-        (unchecked for interface)
-      </label>
-    </div>
-
-    <div class="form-group">
-      <label>
-        <input type="checkbox" id="useLombok" x-model="useLombok" /> @Getter,
-        @Setter
-      </label>
-    </div>
-
-    <div id="methodsContainer">
-      <template x-for="(method) in methods" :key="method.id">
-        <div class="method">
-          <h3 x-text="`Method ${method.id}`"></h3>
-          <div class="form-group">
-            <label>Method Name:</label>
-            <input type="text" x-model="method.name" required />
-          </div>
-          <div class="form-group">
-            <label>Access Modifier:</label>
-            <input type="text" x-model="method.accessModifier" />
-          </div>
-          <div class="form-group">
-            <label>Return Type:</label>
-            <input type="text" x-model="method.returnType" />
-          </div>
-          <div class="form-group">
-            <label>Parameters:</label>
-            <input type="text" x-model="method.parameters" />
-          </div>
-          <button
-            @click="deleteMethod(method.id)"
-            style="background-color: crimson"
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <!-- 컨트롤러 영역 -->
+      <div>
+        <div @click="controller.toggle" style="border: 1px solid #ddd">
+          <div
+            style="
+              padding: 10px;
+              font-size: 16px;
+              font-weight: 600;
+              cursor: pointer;
+            "
           >
-            삭제
-          </button>
+            컨트롤러 토글
+          </div>
         </div>
-      </template>
+        <div x-show="controller.open" class="container" style="border-top: 0">
+          <div
+            style="
+              display: flex;
+              gap: 10px;
+              align-items: center;
+              justify-content: space-between;
+            "
+          >
+            <h3>컨트롤러</h3>
+          </div>
+
+          <div class="form-group">
+            <label>
+              <input type="checkbox" x-model="controller.useLogger" />
+              Logger
+            </label>
+          </div>
+
+          <!-- 변수 -->
+          <div>
+            <div
+              @click="controller.toggleVariables"
+              style="border: 1px solid #ddd"
+            >
+              <div
+                style="
+                  padding: 10px;
+                  font-size: 16px;
+                  font-weight: 600;
+                  cursor: pointer;
+                "
+              >
+                변수 토글
+              </div>
+            </div>
+            <div x-show="controller.openVariables">
+              <template
+                x-for="(variable) in controller.variables"
+                :key="variable.id"
+              >
+                <div
+                  class="container p-10"
+                  style="border-top: 0; margin-bottom: 0"
+                >
+                  <h3 x-text="`변수 ${variable.id}`"></h3>
+                  <div class="form-group">
+                    <label>접근자:</label>
+                    <select x-model="variable.accessModifier">
+                      <option>private</option>
+                      <option>public</option>
+                      <option>protected</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label>타입:</label>
+                    <input type="text" x-model="variable.type" required />
+                  </div>
+
+                  <div class="form-group">
+                    <label>변수명:</label>
+                    <input type="text" x-model="variable.name" required />
+                  </div>
+
+                  <div class="form-group">
+                    <label>애노테이션:</label>
+                    <select x-model="variable.annotation">
+                      <option>선택</option>
+                      <option>@Autowired</option>
+                    </select>
+                  </div>
+
+                  <button
+                    @click="controller.deleteVariable(variable.id)"
+                    style="background-color: crimson"
+                  >
+                    삭제
+                  </button>
+                </div>
+              </template>
+            </div>
+
+            <div class="mt-10">
+              <select x-model="controller.variablesCnt">
+                <option selected>1</option>
+                <option>3</option>
+                <option>5</option>
+                <option>10</option>
+              </select>
+              <button @click="controller.addVariable">변수 추가</button>
+            </div>
+          </div>
+
+          <!-- 메서드 -->
+          <div style="margin-top: 20px">
+            <div
+              @click="controller.toggleMethods"
+              style="border: 1px solid #ddd"
+            >
+              <div
+                style="
+                  padding: 10px;
+                  font-size: 16px;
+                  font-weight: 600;
+                  cursor: pointer;
+                "
+              >
+                메서드 토글
+              </div>
+            </div>
+            <div x-show="controller.openMethods">
+              <template x-for="(method) in controller.methods" :key="method.id">
+                <div
+                  class="container p-10"
+                  style="border-top: 0; margin-bottom: 0"
+                >
+                  <h3 x-text="`메서드 ${method.id}`"></h3>
+                  <div class="form-group">
+                    <label>접근자:</label>
+                    <select x-model="method.accessModifier">
+                      <option>private</option>
+                      <option>public</option>
+                      <option>protected</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label>리턴 타입:</label>
+                    <input type="text" x-model="method.returnType" required />
+                  </div>
+
+                  <div class="form-group">
+                    <label>파라미터:</label>
+                    <input type="text" x-model="method.parameters" />
+                  </div>
+
+                  <div class="form-group">
+                    <label>메서드명:</label>
+                    <input type="text" x-model="method.name" required />
+                  </div>
+
+                  <div class="form-group">
+                    <label>예외:</label>
+                    <input type="text" x-model="method.exception" />
+                  </div>
+
+                  <button
+                    @click="controller.deleteMethod(method.id)"
+                    style="background-color: crimson"
+                  >
+                    삭제
+                  </button>
+                </div>
+              </template>
+            </div>
+
+            <div class="mt-10">
+              <select x-model="controller.methodsCnt">
+                <option selected>1</option>
+                <option>3</option>
+                <option>5</option>
+                <option>10</option>
+              </select>
+              <button @click="controller.addMethods">메서드 추가</button>
+            </div>
+          </div>
+
+          <button
+            @click="controller.generateController"
+            style="margin-top: 15px"
+          >
+            코드 생성
+          </button>
+
+          <div
+            x-show="controller.controllerCode"
+            class="form-group"
+            style="margin-top: 10px"
+          >
+            <label for="controllerCode">생성된 코드:</label>
+            <div>
+              <div
+                style="
+                  border: 1px solid #000;
+                  border-bottom: 0;
+                  text-align: center;
+                "
+              >
+                <div
+                  x-text="controller.clipboard.textPrint"
+                  @click="controller.copyToClipBoard"
+                  class="p-10"
+                  style="font-size: 16px; font-weight: 600; cursor: pointer"
+                ></div>
+              </div>
+              <textarea
+                id="controllerCode"
+                rows="20"
+                x-model="controller.controllerCode"
+                readonly
+              ></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 서비스 영역 -->
+      <div>
+        <div @click="service.toggle" style="border: 1px solid #ddd">
+          <div
+            style="
+              padding: 10px;
+              font-size: 16px;
+              font-weight: 600;
+              cursor: pointer;
+            "
+          >
+            서비스 토글
+          </div>
+        </div>
+        <div x-show="service.open" class="container" style="border-top: 0">
+          <div
+            style="
+              display: flex;
+              gap: 10px;
+              align-items: center;
+              justify-content: space-between;
+            "
+          >
+            <h3>서비스</h3>
+          </div>
+
+          <!-- 메서드 -->
+          <div style="margin-top: 20px">
+            <div @click="service.toggleMethods" style="border: 1px solid #ddd">
+              <div
+                style="
+                  padding: 10px;
+                  font-size: 16px;
+                  font-weight: 600;
+                  cursor: pointer;
+                "
+              >
+                메서드 토글
+              </div>
+            </div>
+            <div x-show="service.openMethods">
+              <template x-for="(method) in service.methods" :key="method.id">
+                <div
+                  class="container p-10"
+                  style="border-top: 0; margin-bottom: 0"
+                >
+                  <h3 x-text="`메서드 ${method.id}`"></h3>
+                  <div class="form-group">
+                    <label>접근자:</label>
+                    <select x-model="method.accessModifier">
+                      <option>private</option>
+                      <option>public</option>
+                      <option>protected</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label>리턴 타입:</label>
+                    <input type="text" x-model="method.returnType" required />
+                  </div>
+
+                  <div class="form-group">
+                    <label>파라미터:</label>
+                    <input type="text" x-model="method.parameters" />
+                  </div>
+
+                  <div class="form-group">
+                    <label>메서드명:</label>
+                    <input type="text" x-model="method.name" required />
+                  </div>
+
+                  <div class="form-group">
+                    <label>예외:</label>
+                    <input type="text" x-model="method.exception" />
+                  </div>
+
+                  <button
+                    @click="service.deleteMethod(method.id)"
+                    style="background-color: crimson"
+                  >
+                    삭제
+                  </button>
+                </div>
+              </template>
+            </div>
+
+            <div class="mt-10">
+              <select x-model="service.methodsCnt">
+                <option selected>1</option>
+                <option>3</option>
+                <option>5</option>
+                <option>10</option>
+              </select>
+              <button @click="service.addMethods">메서드 추가</button>
+            </div>
+          </div>
+
+          <button @click="service.generate" style="margin-top: 15px">
+            코드 생성
+          </button>
+
+          <div
+            x-show="service.serviceCode"
+            class="form-group"
+            style="margin-top: 10px"
+          >
+            <label for="controllerCode">생성된 서비스 인터페이스 코드:</label>
+            <div>
+              <div
+                style="
+                  border: 1px solid #000;
+                  border-bottom: 0;
+                  text-align: center;
+                "
+              >
+                <div
+                  x-text="service.clipboardService.textPrint"
+                  @click="service.copyServiceToClipBoard"
+                  class="p-10"
+                  style="font-size: 16px; font-weight: 600; cursor: pointer"
+                ></div>
+              </div>
+              <textarea
+                rows="20"
+                x-model="service.serviceCode"
+                readonly
+              ></textarea>
+            </div>
+          </div>
+
+          <div
+            x-show="service.serviceCode"
+            class="form-group"
+            style="margin-top: 10px"
+          >
+            <label for="controllerCode">생성된 서비스 클래스 코드:</label>
+            <div>
+              <div
+                style="
+                  border: 1px solid #000;
+                  border-bottom: 0;
+                  text-align: center;
+                "
+              >
+                <div
+                  x-text="service.clipboardServiceImpl.textPrint"
+                  @click="service.copyServiceImplToClipBoard"
+                  class="p-10"
+                  style="font-size: 16px; font-weight: 600; cursor: pointer"
+                ></div>
+              </div>
+              <textarea
+                rows="20"
+                x-model="service.serviceImplCode"
+                readonly
+              ></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <select x-model="addNumber">
-      <option selected>1</option>
-      <option>3</option>
-      <option>5</option>
-      <option>10</option>
-    </select>
-    <button @click="addMethod">Add Method</button>
-    <button @click="generateCode">Generate Code</button>
-
-    <div class="form-group">
-      <label for="generatedCode">Generated Code:</label>
-      <textarea
-        id="generatedCode"
-        rows="20"
-        x-model="generatedCode"
-        readonly
-      ></textarea>
-    </div>
-
-    <script>
-      function app() {
-        return {
-          fileName: "",
-          isClass: true,
-          useLombok: true,
-          addNumber: 1,
-          methods: [],
-          generatedCode: "",
-
-          addMethod() {
-            for (let i = 0; i < this.addNumber; i++) {
-              const methods = this.methods;
-              const id =
-                methods.length > 0
-                  ? Math.max(...methods.map((m) => m.id)) + 1
-                  : 1;
-              this.methods.push({
-                id,
-                name: "",
-                accessModifier: "public",
-                returnType: "void",
-                parameters: "",
-              });
-            }
-          },
-
-          deleteMethod(id) {
-            this.methods = this.methods.filter((m) => m.id !== id);
-          },
-
-          generateCode() {
-            let code = "";
-            if (this.useLombok) {
-              code += "@Getter\n@Setter\n";
-            }
-
-            code += `public ${this.isClass ? "class" : "interface"} ${
-              this.fileName
-            } {\n\n`;
-
-            this.methods.forEach((method) => {
-              code += `    ${method.accessModifier} ${method.returnType} ${method.name}(${method.parameters})`;
-              if (this.isClass) {
-                code += ` {\n        // TODO: Implement method\n    }\n\n`;
-              } else {
-                code += `;\n\n`;
-              }
-            });
-
-            code += "}";
-            this.generatedCode = code;
-          },
-        };
-      }
-    </script>
   </body>
 </html>
