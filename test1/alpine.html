@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko" x-data="app()">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Java File Generator</title>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.10.5/cdn.min.js"
+      defer
+    ></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      input[type="text"],
+      textarea {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+      button {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      #methodsContainer {
+        margin-top: 20px;
+      }
+      .method {
+        border: 1px solid #ddd;
+        padding: 10px;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Java File Generator</h1>
+
+    <div class="form-group">
+      <label for="fileName">File Name (Class/Interface Name):</label>
+      <input type="text" id="fileName" x-model="fileName" required />
+    </div>
+
+    <div class="form-group">
+      <label>
+        <input type="checkbox" id="isClass" x-model="isClass" /> Is Class
+        (unchecked for interface)
+      </label>
+    </div>
+
+    <div class="form-group">
+      <label>
+        <input type="checkbox" id="useLombok" x-model="useLombok" /> Use Lombok
+      </label>
+    </div>
+
+    <div id="methodsContainer">
+      <template x-for="(method, index) in methods" :key="method.id">
+        <div class="method">
+          <h3 x-text="`Method ${index + 1}`"></h3>
+          <div class="form-group">
+            <label>Method Name:</label>
+            <input type="text" x-model="method.name" required />
+          </div>
+          <div class="form-group">
+            <label>Access Modifier:</label>
+            <input type="text" x-model="method.accessModifier" />
+          </div>
+          <div class="form-group">
+            <label>Return Type:</label>
+            <input type="text" x-model="method.returnType" />
+          </div>
+          <div class="form-group">
+            <label>Parameters:</label>
+            <input type="text" x-model="method.parameters" />
+          </div>
+          <button
+            @click="deleteMethod(method.id)"
+            style="background-color: crimson"
+          >
+            삭제
+          </button>
+        </div>
+      </template>
+    </div>
+    <button @click="addMethod">Add Method</button>
+    <button @click="generateCode">Generate Code</button>
+
+    <div class="form-group">
+      <label for="generatedCode">Generated Code:</label>
+      <textarea
+        id="generatedCode"
+        rows="20"
+        x-model="generatedCode"
+        readonly
+      ></textarea>
+    </div>
+
+    <script>
+      function app() {
+        return {
+          fileName: "",
+          isClass: true,
+          useLombok: false,
+          methods: [],
+          generatedCode: "",
+
+          addMethod() {
+            const methods = this.methods;
+            const id =
+              methods.length > 0 ? Math.max(methods.map((m) => m.id)) : 1;
+            this.methods.push({
+              id,
+              name: "",
+              accessModifier: "public",
+              returnType: "void",
+              parameters: "",
+            });
+          },
+
+          deleteMethod(id) {
+            this.methods = this.methods.filter((m) => m.id !== id);
+          },
+
+          generateCode() {
+            let code = "";
+            if (this.useLombok) {
+              code += "@Getter\n@Setter\n";
+            }
+
+            code += `public ${this.isClass ? "class" : "interface"} ${
+              this.fileName
+            } {\n\n`;
+
+            this.methods.forEach((method) => {
+              code += `    ${method.accessModifier} ${method.returnType} ${method.name}(${method.parameters})`;
+              if (this.isClass) {
+                code += ` {\n        // TODO: Implement method\n    }\n\n`;
+              } else {
+                code += `;\n\n`;
+              }
+            });
+
+            code += "}";
+            this.generatedCode = code;
+          },
+        };
+      }
+    </script>
+  </body>
+</html>
